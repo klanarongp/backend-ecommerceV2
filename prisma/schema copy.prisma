@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model address {
+  email          String @db.VarChar(50)
+  street_address String @db.Text
+  city           String @db.VarChar(50)
+  state          String @db.VarChar(50)
+  postal_code    String @db.VarChar(50)
+  country        String @db.VarChar(50)
+  phone          String @db.VarChar(50)
+  users          users  @relation(fields: [email], references: [email], onUpdate: Restrict, map: "fk_address")
+
+  @@index([email], map: "fk_address")
+}
+
+model billing {
+  order_id     Int    @id @default(autoincrement())
+  email        String @db.VarChar(50)
+  promotion_id String @db.VarChar(50)
+  amount       Int
+  vat          Int
+  price        Int
+  total_price  Int
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model billing_detail {
+  id          Int
+  product_id  Int @db.UnsignedInt
+  order_id    Int @db.UnsignedInt
+  unit        Int
+  price       Int
+  total_price Int
+  quantity    Int
+
+  @@ignore
+}
+
+model products {
+  id              Int     @id @default(autoincrement()) @db.UnsignedInt
+  description     String  @db.Text
+  unit            String  @db.VarChar(50)
+  price           Float
+  img             Bytes
+  size            String  @db.VarChar(50)
+  type            String  @db.VarChar(50)
+  discount_price  Float
+  is_on_promotion Boolean @default(false)
+  quantity        Int     @default(0)
+}
+
+model promotion {
+  id            String    @id @db.VarChar(50)
+  description   String    @db.Text
+  status        String    @db.VarChar(50)
+  discount      Int
+  start_duedate DateTime? @db.Timestamp(0)
+  end_duedate   DateTime? @db.Timestamp(0)
+}
+
+model users {
+  email    String    @id @db.VarChar(50)
+  password String    @db.VarChar(250)
+  role     String?   @default("user") @db.VarChar(50)
+  address  address[] @ignore
+}
